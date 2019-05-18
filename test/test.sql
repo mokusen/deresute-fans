@@ -1,0 +1,1 @@
+select DISTINCT idol_fans.idol_id, idol_base.idol_name from idol_fans inner join idol_base on idol_fans.idol_id = idol_base.idol_id;
