@@ -1,11 +1,13 @@
 import wx
 import datetime
-from method.models import connect_mysql, handle_yaml
+from method.sql import connect_mysql
+from method.utils import handle_yaml
+from pathlib import Path
 
 
 class MainGui(wx.Frame):
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, size=(300, 330))
+        wx.Frame.__init__(self, parent, id, title, size=(330, 330))
         panel = MainPanel(self)
         self.Center()
         self.Show()
@@ -18,7 +20,8 @@ class MainPanel(wx.Panel):
         self.input_number = 5
         self.defalut_size = (120, 30)
         self.defalut_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, 'Meiryo UI')
-        self.idol_list = connect_mysql.select_idot_base()
+        self.idol_list = connect_mysql.select_idol_base()
+        self.before_date_info_yaml_path = Path(__file__).parents[2].joinpath('before_date_info.yml')
         self.__myinit()
 
     def __myinit(self):
@@ -125,7 +128,7 @@ class MainPanel(wx.Panel):
             # 登録情報を一時保存する
             before_date_yaml = {'idol_list': {index: idol_id for index, idol_id in enumerate(idol_list)},
                                 'fans_list': {index: fans for index, fans in enumerate(fans_list)}}
-            handle_yaml.outputBeforeDate(before_date_yaml)
+            handle_yaml.output_yaml(self.before_date_info_yaml_path, before_date_yaml)
         dlg.Destroy()
 
     def __check_input_date(self):
@@ -149,7 +152,7 @@ class MainPanel(wx.Panel):
         return return_message[:-1], idol_list, fans_list
 
     def restore_date(self, event):
-        before_date = handle_yaml.getBeforeDate()
+        before_date = handle_yaml.get_yaml(self.before_date_info_yaml_path)
 
         # 前回の情報を入力欄に復元する
         for index in range(len(before_date["idol_list"])):
