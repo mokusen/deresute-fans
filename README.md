@@ -1,10 +1,2 @@
-# 修復値
-```sql
-update idol_fans set fans = 1456282 where id = 610;
-update idol_fans set fans =  where id = ;
-update idol_fans set fans =  where id = ;
-```
-
-```sql
-
-```
+# deresute-fans
+デレステのリザルト画面から、アイドル、ファン数を特定して、指定先のMysqlへ保存し、Grafanaを用いて可視化します。
