@@ -2,4 +2,13 @@ dele
 **.sh
 **.yml
 **.json
+**.txt
 __pycache__
+image
+
+# 初期化処理系
+re_insert.py
+
+# テスト環境用
+tests
+test_main.py
