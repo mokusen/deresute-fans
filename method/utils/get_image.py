@@ -10,5 +10,4 @@ def download_img(url, fold_path, file_name):
     r = requests.get(url, stream=True)
     if r.status_code == 200:
         with open(input_file_name, 'wb') as f:
-            r.raw.decode_content = True
-            shutil.copyfileobj(r.raw, f)
+            f.write(r.content)

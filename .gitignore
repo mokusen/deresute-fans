@@ -5,6 +5,8 @@ dele
 **.txt
 __pycache__
 image
+memo.md
+logs
 
 # 初期化処理系
 re_insert.py

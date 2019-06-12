@@ -18,7 +18,10 @@ class MainPanel(wx.Panel):
         wx.Panel.__init__(self, parent=parent)
         self.frame = parent
         self.input_number = 5
-        self.defalut_size = (120, 30)
+        self.defalut_size = (120, 28)
+        self.idol_size = (160, 28)
+        self.time_txt_size = (90, 28)
+        self.time_size = (190, 28)
         self.defalut_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, 'Meiryo UI')
         self.idol_list = connect_mysql.select_idol_base()
         self.before_date_info_yaml_path = Path(__file__).parents[2].joinpath('before_date_info.yml')
@@ -45,12 +48,13 @@ class MainPanel(wx.Panel):
 
     def __idot_panel(self):
         idol_name = wx.StaticText(self, wx.ID_ANY, 'アイドル名', size=self.defalut_size, style=wx.TE_CENTER)
-        self.idol_input_list = [wx.ComboBox(self, wx.ID_ANY, '', choices=self.idol_list, style=wx.CB_DROPDOWN) for _ in range(self.input_number)]
+        self.idol_input_list = [wx.ComboBox(self, wx.ID_ANY, '', choices=self.idol_list, size=self.idol_size, style=wx.CB_DROPDOWN) for _ in range(self.input_number)]
 
         # フォントサイズ設定
         idol_name.SetFont(self.defalut_font)
         for idol_input in self.idol_input_list:
             idol_input.SetFont(self.defalut_font)
+            print(idol_input.GetBestSize())
 
         # レイアウト調整
         base_layout = wx.GridBagSizer(0, 0)
@@ -76,8 +80,8 @@ class MainPanel(wx.Panel):
         return base_layout
 
     def __time_panel(self):
-        time_text = wx.StaticText(self, wx.ID_ANY, '登録時間', size=self.defalut_size, style=wx.TE_CENTER)
-        self.time_input = wx.TextCtrl(self, wx.ID_ANY, '', size=self.defalut_size)
+        time_text = wx.StaticText(self, wx.ID_ANY, '登録時間', size=self.time_txt_size, style=wx.TE_CENTER)
+        self.time_input = wx.TextCtrl(self, wx.ID_ANY, '', size=self.time_size)
 
         # フォントサイズ設定
         time_text.SetFont(self.defalut_font)
@@ -110,24 +114,26 @@ class MainPanel(wx.Panel):
         return restore_button
 
     def regi_date(self, event):
-        message, idol_list, fans_list = self._MainPanel__check_input_date()
+        message, idol_list, fans_list = self.__check_input_date()
         if message != '':
             return wx.MessageBox(message, "入力エラー", wx.ICON_ERROR)
         create_ts = self.time_input.GetValue()
         dlg = wx.MessageDialog(None, "登録を開始して良いですか？", ' 登録内容確認', wx.YES_NO | wx.ICON_INFORMATION)
         result = dlg.ShowModal()
         if result == wx.ID_YES:
-            if create_ts != '':
-                for index in range(len(idol_list)):
-                    connect_mysql.insert_idol_fans(idol_list[index], fans_list[index], create_ts)
-            else:
-                for index in range(len(idol_list)):
-                    connect_mysql.insert_idol_fans(idol_list[index], fans_list[index], datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            # if create_ts != '':
+            #     for index in range(len(idol_list)):
+            #         connect_mysql.insert_idol_fans(idol_list[index], fans_list[index], create_ts)
+            # else:
+            #     for index in range(len(idol_list)):
+            #         connect_mysql.insert_idol_fans(idol_list[index], fans_list[index], datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             wx.MessageBox("登録完了しました。", "登録完了", wx.ICON_INFORMATION)
 
             # 登録情報を一時保存する
+            print(self.time_input.GetValue())
             before_date_yaml = {'idol_list': {index: idol_id for index, idol_id in enumerate(idol_list)},
-                                'fans_list': {index: fans for index, fans in enumerate(fans_list)}}
+                                'fans_list': {index: fans for index, fans in enumerate(fans_list)},
+                                'time': self.time_input.GetValue()}
             handle_yaml.output_yaml(self.before_date_info_yaml_path, before_date_yaml)
         dlg.Destroy()
 
@@ -158,6 +164,7 @@ class MainPanel(wx.Panel):
         for index in range(len(before_date["idol_list"])):
             self.idol_input_list[index].SetSelection(before_date["idol_list"][index]-1)
             self.fans_input_list[index].SetValue(str(before_date["fans_list"][index]))
+            self.time_input.SetValue(before_date["time"])
 
 
 def callMainGui():

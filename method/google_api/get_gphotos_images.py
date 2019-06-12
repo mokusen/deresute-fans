@@ -23,7 +23,9 @@ def update_access_token():
 
 
 def get_gPhotos_images():
-    access_token = handle_yaml.get_yaml(token_path)["access_token"]
+    token = handle_yaml.get_yaml(token_path)
+    access_token = token["access_token"]
+    api_key = token["api_key"]
     data_yml = handle_yaml.get_yaml(setting_path)["google_api"]
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -50,7 +52,7 @@ def get_gPhotos_images():
              }
          }
     })
-    response = requests.post('https://photoslibrary.googleapis.com/v1/mediaItems:search', headers=headers, data=data)
+    response = requests.post(f'https://photoslibrary.googleapis.com/v1/mediaItems:search?key={api_key}', headers=headers, data=data)
     return response.json()
 
 

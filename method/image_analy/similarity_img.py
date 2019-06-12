@@ -9,17 +9,15 @@ import re
 import concurrent.futures
 
 image_folder_path = Path(__file__).resolve().parents[2].joinpath("image")
+gphoto_folder_path = image_folder_path.joinpath('gPhoto')
 
 
-def similarity(target_file, img_dir, output_switch, cal_mode):
+def similarity(target_file, output_switch, cal_mode):
     """
     Parameters
     ----------
     target_file : str
         filename.png(.jpg)等の拡張子付きファイル名
-
-    img_dir : str
-        探索フォルダパス
 
     output_switch : int
         0:出力しない
@@ -38,9 +36,10 @@ def similarity(target_file, img_dir, output_switch, cal_mode):
     # 初期設定
     IMG_SIZE = (200, 200)
     similarity_dict = {}
+    test = {}
 
     # 検索画像の情報
-    target_img_path = str(img_dir.joinpath(target_file))
+    target_img_path = str(gphoto_folder_path.joinpath(target_file))
     target_img = cv2.imread(target_img_path)
     target_img = cv2.resize(target_img, IMG_SIZE)
 
@@ -86,6 +85,7 @@ def similarity(target_file, img_dir, output_switch, cal_mode):
     # 最小値算出
     min_img_path = min(similarity_dict, key=similarity_dict.get)
     min_value = similarity_dict[min_img_path]
+
     # 結果出力
     if output_switch != 0:
         print(f"\nRESULT\npath: {min_img_path}, values: {min_value}")
@@ -103,70 +103,16 @@ def similarity(target_file, img_dir, output_switch, cal_mode):
     return min_img_path, min_value
 
 
-def __output_mode(min_img_path, output_mode, idol_name_list):
-    """
-    アイドル名をモードによってはリストに追加して返却する
-
-    Parameters
-    ----------
-    output_mode : int
-        0:最適画像パスと類似度を出力する
-        1:最適画像のアイドル名を返却する
-
-    Returns
-    -------
-    idol_name_list : list
-        idol_name_listに追加して返却する
-    """
-    if output_mode == 1:
-        idol_name = min_img_path.parent.name
-        idol_name_list.append(idol_name)
-    return idol_name_list
-
-
-def start_similarity_images(output_switch, output_mode):
-    """
-    画像の類似度検索を行い、output_modeによって返却する内容を変更する
-
-    Parameters
-    ----------
-    output_switch : int
-        0:出力しない
-        1:検索画像名、各類似度を出力する
-        2:TOP10を出力する
-
-    output_mode : int
-        0:最適画像パスと類似度を出力する
-        1:最適画像のアイドル名を返却する
-    """
-    t_list = ['r-0.png', 'r-1.png', 'r-2.png', 'r-3.png', 'r-4.png']
-    IMG_DIR = image_folder_path.joinpath('gPhoto')
-    idol_name_list = []
-    for target in t_list:
-        akaze_image_path, akaze_min_value = similarity(target, IMG_DIR, output_switch, cal_mode=0)
-        # 閾値100を与え、超えた場合はORB方式で再度類似度を求める
-        if akaze_min_value >= 100:
-            orb_image_path, orb_min_value = similarity(target, IMG_DIR, output_switch, cal_mode=1)
-            # 両方式で同一画像が選択され、最小値がともに規定値の1000000でなければ採択する
-            if akaze_image_path == orb_image_path and akaze_min_value != 1000000 and orb_min_value != 1000000:
-                idol_name_list = __output_mode(akaze_image_path, output_mode, idol_name_list)
-            else:
-                print("there is no similar image")
-                break
-        else:
-            idol_name_list = __output_mode(akaze_image_path, output_mode, idol_name_list)
-    if output_mode == 1:
-        return idol_name_list
-
-
 def __multi_process_similarity(image_path, output_switch, idol_index):
-    IMG_DIR = image_folder_path.joinpath('gPhoto')
-    akaze_image_path, akaze_min_value = similarity(image_path, IMG_DIR, output_switch, cal_mode=0)
+    akaze_image_path, akaze_min_value = similarity(image_path, output_switch, cal_mode=0)
     # 閾値100を与え、超えた場合はORB方式で再度類似度を求める
-    if akaze_min_value >= 100:
-        orb_image_path, orb_min_value = similarity(image_path, IMG_DIR, output_switch, cal_mode=1)
+    if akaze_min_value == 1000000:
+        print(f"there is no similar image index: {image_path}")
+        idol_name = ""
+    elif akaze_min_value >= 100:
+        orb_image_path, orb_min_value = similarity(image_path, output_switch, cal_mode=1)
         # 両方式で同一画像が選択され、最小値がともに規定値の1000000でなければ採択する
-        if akaze_image_path == orb_image_path and akaze_min_value != 1000000 and orb_min_value != 1000000:
+        if akaze_image_path == orb_image_path and orb_min_value != 1000000:
             idol_name = akaze_image_path.parent.name
         else:
             print(f"there is no similar image index: {image_path}")
@@ -190,6 +136,5 @@ def multi_process_similarity_main(output_switch):
 if __name__ == "__main__":
     import time
     start = time.time()
-    # start_similarity_images(output_switch=2, output_mode=0)
     multi_process_similarity_main(output_switch=0)
     print(f"実行時間:{time.time()-start:.1f}[s]")

@@ -1,10 +1,12 @@
 # from method.analy.imageAnaly import google_ocr
 from method.google_api import get_gphotos_images, google_ocr
-from method.utils import get_image
+from method.utils import get_image, dele_logger
 from method.image_analy import trimming_img, similarity_img
 from method.sql import connect_mysql
 from pathlib import Path
 import datetime
+
+logger = dele_logger.set_logger(__name__)
 
 # 写真データを取得する
 images_info = get_gphotos_images.get_images_info()
@@ -28,11 +30,17 @@ for c_time in creation_list:
     jpn_creation_list.append(jpn_time.strftime('%Y-%m-%d %H:%M:%S'))
 print(jpn_creation_list)
 
+# debug
+# import pprint
+# pprint.pprint(image_url_list)
+# exit()
+
 # 取得した画像分実行する
 gphoto_folder_path = Path(__file__).resolve().parents[0].joinpath("image/gPhoto")
 gphoto_name = 'gphoto.jpg'
 for count in range(len(image_url_list)):
-    print(f"{count+1}枚目")
+    print(f"{count+1}枚目：{jpn_creation_list[count]}")
+    logger.info(f"{count+1}枚目：{jpn_creation_list[count]}")
     # Photosから取得した画像を保存する
     get_image.download_img(image_url_list[count], gphoto_folder_path, gphoto_name)
 
@@ -55,10 +63,12 @@ for count in range(len(image_url_list)):
     # 登録アイドル、ファン人数の重複を削除する
     unique_idol_list = list(dict.fromkeys(idol_list))
     unique_fans_list = list(dict.fromkeys(fans_list))
+    if len(unique_idol_list) != len(unique_fans_list):
+        logger.warning(f"GVA返り値不正が疑われます：idol：{unique_idol_list} fans：{unique_fans_list}")
     print(unique_idol_list)
     print(unique_fans_list)
 
-    # アイドルIDを取得する
+    # アイドル名（アルファベット）を取得する
     idol_id_list = connect_mysql.select_idol_base()
 
     # データベースへ登録作業を行う
